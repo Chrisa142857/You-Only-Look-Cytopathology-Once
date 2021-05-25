@@ -1,0 +1,47 @@
+O:\WSIData\TransSRP\sfy3\SZSQ\positive\Shengfuyou_3th_positive_40X\1154896 0893135.srp
+O:\WSIData\TransSRP\sfy3\SZSQ\positive\Shengfuyou_3th_positive_40X\1159971 0893047.srp
+O:\WSIData\TransSRP\sfy3\SZSQ\positive\Shengfuyou_3th_positive_40X\1161511 0893060.srp
+O:\WSIData\TransSRP\sfy3\SZSQ\positive\Shengfuyou_3th_positive_40X\1162026 0893002.srp
+O:\WSIData\TransSRP\sfy3\SZSQ\positive\Shengfuyou_3th_positive_40X\1179195 0893181.srp
+O:\WSIData\TransSRP\sfy3\SZSQ\positive\Shengfuyou_3th_positive_40X\1180006 0893190.srp
+O:\WSIData\TransSRP\sfy5\SZSQ\positive\sfy5_21\1152412_0893203.srp
+O:\WSIData\TransSRP\sfy5\SZSQ\positive\sfy5_21\1615768_2226131.srp
+O:\WSIData\TransSRP\sfy5\SZSQ\positive\Shengfuyou_5th_positive_20X\1111112_0893045.srp
+O:\WSIData\TransSRP\sfy5\SZSQ\positive\Shengfuyou_5th_positive_20X\1125932_0893188.srp
+O:\WSIData\TransSRP\sfy5\SZSQ\positive\Shengfuyou_5th_positive_20X\1152490_0893251.srp
+O:\WSIData\TransSRP\sfy5\SZSQ\positive\Shengfuyou_5th_positive_20X\1178504_0893202.srp
+O:\WSIData\TransSRP\sfy6\SZSQ\Shengfuyou_6th_negtive_20X\0001775_2008161.srp
+O:\WSIData\TransSRP\sfy6\SZSQ\Shengfuyou_6th_negtive_20X\0001795_2008000.srp
+O:\WSIData\TransSRP\sfy6\SZSQ\Shengfuyou_6th_negtive_20X\0001814_2008101.srp
+O:\WSIData\TransSRP\sfy6\SZSQ\Shengfuyou_6th_negtive_20X\1140876_0893172.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_20x\negative\0001834_2008094.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_20x\negative\0001883_2008041.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_20x\positive\1139248_0893101.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_20x\positive\1165323_0893071.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_20x\positive\1615969_2226044.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_40x\Shengfuyou_7th_negative_40x\0001835.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_40x\Shengfuyou_7th_negative_40x\0001884.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_40x\Shengfuyou_7th_positive_40x\1148116.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_40x\Shengfuyou_7th_positive_40x\1165248.srp
+O:\WSIData\TransSRP\sfy7\SZSQ\shengqiang_40x\Shengfuyou_7th_positive_40x\1615334.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\20190719negative\sfy1138176 0893015.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\20190719negative\sfy1138210 0893105.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\20190719negative\sfy1138245 0893099.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\20190719negative\syf1138234 0893207.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\20190815negative\sfy1138278 0893059.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\negative\sfy1136075_0893006.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\negative\sfy1136096_0893021.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\negative\sfy1138114_0893158.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\negative\sfy1138136_0893121.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\negative\sfy1138157_0893090.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\positive\pos_ascus\sfy1148637 0893222.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\positive\pos_ascus\sfy1615410 2226052.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\positive\pos_ascus\sfy1615836 2226195.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\positive\pos_hsil\sfy1158770_0893106.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\positive\pos_hsil\sfy1615749_2226214.srp
+O:\WSIData\TransSRP\sfy8\SZSQ\positive\pos_lsil\sfy15090006.srp
+O:\WSIData\TransSRP\sfy9\SZSQ\sfy1103218guojuan.srp
+O:\WSIData\TransSRP\sfy9\SZSQ\sfy1109933 0893013.srp
+O:\WSIData\TransSRP\sfy9\SZSQ\sfy15100203pengfang.srp
+O:\WSIData\TransSRP\sfy9\SZSQ\sfy16030868xiapan.srp
+O:\WSIData\TransSRP\sfy9\SZSQ\sfychenshuying scc.srp
