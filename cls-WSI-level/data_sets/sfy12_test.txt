@@ -1,0 +1,53 @@
+O:/WSIData/TransSRP/sfy1/3DHisTech/Negative/0067316 1009174.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Negative/0067332 1009008.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Negative/0067382 1009080.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Negative/0067404 1009015.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Negative/0067418 1009002.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Negative/0067434 1009187.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Negative/1140101 0893114.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/01.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/1108536 0893153.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/1109971 0893167.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/1114127 0893071.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/1132424 0893206.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/16020700 zhangkaiqian Ascus 13.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/161241qiuxiangguanAscus 19.srp
+O:/WSIData/TransSRP/sfy1/3DHisTech/Positive/355wangcaieH10.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/0418_1M12.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/0418_1M25_2.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/0418_2M13.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/0418_3M01.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156252 0893174.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156320 0893150.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156336 0893088.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156351 0893058_2.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156365 0893019.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156381 0893047.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156404 0893194.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156421 0893010.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156708 0893042.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156726 0893079.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156740 0893067.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156757 0893227.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156771 0893153.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156787 0893246.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1156811 0893051.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1158107 0893083.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1158122 0893155.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1158138 0893215.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1158154 0893024.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1158171 0893208.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1158187 0893191.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Negative/1158200 0893022.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/100_0000806 2008220.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/100_1135523 0893027.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/100_1142344 0893074.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/100_1143985 0893013.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/100_1160141 0893183.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/100_1160562 0893166.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/100_1169109 0893159.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/69_0073135 1009103.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/69_1138420 0893009.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/69_1141082 0893252.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/69_1144886 0893069.srp
+O:/WSIData/TransSRP/sfy2/3DHisTech/Positive/69_160080_2.srp
