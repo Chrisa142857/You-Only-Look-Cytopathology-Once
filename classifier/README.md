@@ -6,4 +6,4 @@
 + LSTM
     + torch.nn.LSTM
 + Transformer
-    + github://vit-pytorch
+    + https://github.com/lucidrains/vit-pytorch
