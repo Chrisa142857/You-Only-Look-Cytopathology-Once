@@ -4,3 +4,4 @@ train on annotations from 138 slides, for the feature extraction.
 
 ## Notes
 - `slide_readtool` includes the private WSI format used in the experience, please download from link:
+- `data` includes the private bbox annotations used in the experience, please download from link:
