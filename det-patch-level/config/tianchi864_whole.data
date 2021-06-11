@@ -1,0 +1,4 @@
+classes= 1
+train=Z:/wei/tianchi_cevical/whole_roi_detection/image_sets/tianchi864_whole_roi_train.txt
+valid=Z:/wei/tianchi_cevical/whole_roi_detection/image_sets/tianchi864_whole_roi_valid.txt
+names=data/custom/classes.names

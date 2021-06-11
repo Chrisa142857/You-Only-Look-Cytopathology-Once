@@ -1,0 +1,4 @@
+classes= 1
+train=Z:/wei/PCDD_all/data_sets/images1024_train_new.txt
+valid=Z:/wei/PCDD_all/data_sets/images1024_valid_new.txt
+names=data/custom/classes.names
