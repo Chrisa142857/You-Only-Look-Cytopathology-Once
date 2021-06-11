@@ -1,2 +1,0 @@
-## data list
-.txt
