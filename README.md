@@ -1,2 +1,3 @@
 # You-Only-Look-Cytopathology-Once
-Codes Available of Paper "An Efficient Analysis for Cytopathological Cervical Whole Slide Image Based on Multiple Scale and Multiple Source Deep Learning Features on a 2,019 Slides Dataset"
+Codes Available of Paper:
+- An Efficient Cervical Cancer Prediction from Cytopathological Whole Slide Image Based on Enhanced Deep Learning Features on 2,019 Slides Dataset
