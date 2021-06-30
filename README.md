@@ -5,3 +5,4 @@ Codes Available of Paper, An Efficient Cervical Whole Slide Image Analysis Frame
 - [x] Patch level detection task `det-patch-level/`
 - [x] Qualitative results `qualitative-results/`
 - [ ] WSI level task `cls-WSI-level/`
+- [ ] WSI level feature extraction `det-WSI-level/`
