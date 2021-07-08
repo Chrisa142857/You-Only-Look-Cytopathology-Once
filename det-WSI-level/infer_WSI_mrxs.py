@@ -108,8 +108,8 @@ def get_sequence(yolos, fms, anchor_num=2, model_dim=7, disThres=0):
         for yolo in yolos:
             if yolo.shape[-1] != fms.shape[-1]:
                 yolo = torch.max_pool2d(yolo, int(yolo.shape[-1]/fms.shape[-1]), int(yolo.shape[-1]/fms.shape[-1]))
-            yolo = yolo.view(anchor_num, model_dim, yolo.shape[1], yolo.shape[2]).permute(0, 2, 3, 1).contiguous()
             outputs.append(yolo)
+            yolo = yolo.view(anchor_num, model_dim, yolo.shape[1], yolo.shape[2]).permute(0, 2, 3, 1).contiguous()
             conf = torch.sigmoid(yolo[..., 4] * torch.exp(-1 * yolo[..., 5]))  # conf
             fp_conf = torch.sigmoid(yolo[..., 5])  # fp_conf
             mins, maxs = getMaxsMinsFromYolo(conf, 50, disThres=disThres, xs=xs, ys=ys)
@@ -139,7 +139,7 @@ def get_sequence(yolos, fms, anchor_num=2, model_dim=7, disThres=0):
             _maxs = _maxs + [maxs]
         _mins = torch.cat(_mins)
         _maxs = torch.cat(_maxs)
-    return prepareSequence(xs, ys, fms, _mins, _maxs), prepareSequence(ys, xs, fms, _mins, _maxs), _mins, _maxs, torch.stack(outputs)
+    return prepareSequence(xs, ys, fms, _mins, _maxs), prepareSequence(ys, xs, fms, _mins, _maxs), _mins, _maxs, prepareSequence(xs, ys, torch.cat(outputs), _mins, _maxs), prepareSequence(ys, xs, torch.cat(outputs), _mins, _maxs)
 
 
 def name2slidename(name):
@@ -229,7 +229,7 @@ def params_MRXS(dataset, img_size, overlap):
         for x, y in zip(xs[f], ys[f]):
             name = '%s-%d-%d' % (f.replace('\\', '/').split('/')[-1].split('.mrxs')[0], int(x/2), int(y/2))
             fmxys[name] = [x2ind[x], y2ind[y]]
-            center_side[name] = [dataset.cside[f], dataset.cside[f]]
+            center_side[name] = [dataset.cside[f]+iw, dataset.cside[f]+ih]
     return fmxys, center_side
 
 def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch_size, images_folder, labels_folder='labels', SAVE_TXT='pcdd_val.txt', fp_flag=False, interval_sign=',', overlap = 100, level=0, center_side=40000, name='val',
@@ -240,13 +240,13 @@ def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch
     font = cv2.FONT_HERSHEY_SIMPLEX
     model.eval()
     ######################################
-    # seq_root = r'%s_output\sfyall_sequencesmnv2_forvis' % _ROOT_
-    # seq_root = r'%s_output\xyw_icnmanualchecked' % _ROOT_
-    # seq_root = r'%s_output\sfy1&2_sequencesyolov3Over288MRXS' % _ROOT_)
     if isMNV2:
         seq_root = r'%s_output\sfy1&2_sequencesmnv2MRXSDebug' % _ROOT_
     else:
-        seq_root = r'%s_output\sfy1&2_sequencesyolov3MRXSDebug' % _ROOT_
+        # seq_root = r'%s_output\sfy1&2_sequencesyolov3MRXSDebug' % _ROOT_)
+        # seq_root = r'%s_output\sfyall_sequencesmnv2_forvis' % _ROOT_)
+        seq_root = r'%s_output\sfyallmrxs_sequencesicn' % _ROOT_
+        # seq_root = r'%s_output\sfy1&2_sequencesyolov3Over288MRXS' % _ROOT_)
     seq_root = determinating_path(seq_root.replace('\\', '/'))
     os.makedirs(seq_root, exist_ok=True)
     os.makedirs(seq_root+'disconserve0', exist_ok=True)
@@ -317,7 +317,7 @@ def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch
         if imgs is None: continue
         start = datetime.datetime.now()
         if isMNV2:
-            imgs = imgs[:,:,:4832,:4832] # mnicn
+            # imgs = imgs[:,:,:4832,:4832] # mnicn
             # imgs = imgs[:,:,:5760,:5760] # mnv2
             with torch.no_grad():
                 featuremap = model.features(imgs.to(device))
@@ -329,7 +329,7 @@ def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch
             # imgs = imgs[:,:,:7008,:7008] # tiny
             with torch.no_grad():
                 output = model(imgs.to(device), fp_flag=fp_flag, x_pre_filters=str(int(anchor_num*model_dim)))
-        img_size = imgs.shape[-1]
+        # img_size = imgs.shape[-1]
         print('Data computed!')
         if "testSpeed" in seq_root: continue
         for i, name in enumerate(names):
@@ -338,10 +338,10 @@ def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch
                 # center_side = [min([c,41600]) for c in center_side]
             print(name, center_side)
             yolo, fm = [y[i] for y in output['yolo']], [f[i] for f in output['feature_map']]
-            __allendxs = [i for i in range(0, center_side[0], img_size-overlap)]
-            __allendys = [i for i in range(0, center_side[1], img_size-overlap)]
-            allends = [[int(__allendxs[-1] / (img_size / y.shape[-1])) + int(img_size / (img_size / y.shape[-1])), int(__allendys[-1] / (img_size / y.shape[-2])) + int(img_size / (img_size / y.shape[-2]))] for y in yolo]
-            fmsides = [[img_size / (img_size / y.shape[-1]), img_size / (img_size / y.shape[-2])] for y in yolo]
+            __allendxs = [i for i in range(0, center_side[0], imgs.shape[-1]-overlap)]
+            __allendys = [i for i in range(0, center_side[1], imgs.shape[-2]-overlap)]
+            allends = [[int(__allendxs[-1] / (imgs.shape[-1] / y.shape[-1])) + int(imgs.shape[-1] / (imgs.shape[-1] / y.shape[-1])), int(__allendys[-1] / (imgs.shape[-2] / y.shape[-2])) + int(imgs.shape[-2] / (imgs.shape[-2] / y.shape[-2]))] for y in yolo]
+            fmsides = [[imgs.shape[-1] / (imgs.shape[-1] / y.shape[-1]), imgs.shape[-2] / (imgs.shape[-2] / y.shape[-2])] for y in yolo]
             slide_name = name2slidename(name)
             xy = xys[name]
             if slide_name not in yolos:
@@ -357,8 +357,8 @@ def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch
                 ]
             print('fm allocated')
             for _i, (fm_side4, fm_side3) in enumerate(fmsides):
-                xoffset = 0 if xy[0] == 0 else int(overlap / (img_size / yolo[_i].shape[-1]))
-                yoffset = 0 if xy[1] == 0 else int(overlap / (img_size / yolo[_i].shape[-1]))
+                xoffset = 0 if xy[0] == 0 else int(overlap / (imgs.shape[-1] / yolo[_i].shape[-1]))
+                yoffset = 0 if xy[1] == 0 else int(overlap / (imgs.shape[-1] / yolo[_i].shape[-1]))
                 xstart = int(xy[0] * (fm_side3 - xoffset))
                 ystart = int(xy[1] * (fm_side4 - yoffset))
                 xend = int(xstart + fm_side3)
@@ -398,13 +398,13 @@ def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch
                         print('Changed: fms[slide_name][%s]'%_i, fms[slide_name][_i].shape)
                 fms[slide_name] = torch.cat(fms[slide_name])
                 print('fms[slide_name]', fms[slide_name].shape)
-                seq_dataxy, seq_datayx, _mins, _maxs, outputs = get_sequence(yolos[slide_name], fms[slide_name], disThres=0, anchor_num=anchor_num, model_dim=model_dim)
-                if not forVis: outputs = []
-                expseq_dis0 = {'dataxy': seq_dataxy, 'datayx': seq_datayx, 'mins': _mins, 'maxs': _maxs, 'outputs': outputs}
+                seq_dataxy, seq_datayx, _mins, _maxs, seq_outputxy, seq_outputyx = get_sequence(yolos[slide_name], fms[slide_name], disThres=0, anchor_num=anchor_num, model_dim=model_dim)
+                # if not forVis: outputs = []
+                expseq_dis0 = {'dataxy': seq_dataxy, 'datayx': seq_datayx, 'mins': _mins, 'maxs': _maxs, 'outputxy': seq_outputxy, 'outputyx': seq_outputyx}
                 torch.save(expseq_dis0, os.path.join(seq_root+'disconserve0', slide_name + '.pth'))
-                seq_dataxy, seq_datayx, _mins, _maxs, outputs = get_sequence(yolos[slide_name], fms[slide_name], disThres=10, anchor_num=anchor_num, model_dim=model_dim)
-                if not forVis: outputs = []
-                expseq = {'dataxy': seq_dataxy, 'datayx': seq_datayx, 'mins': _mins, 'maxs': _maxs, 'outputs': outputs}
+                seq_dataxy, seq_datayx, _mins, _maxs, seq_outputxy, seq_outputyx = get_sequence(yolos[slide_name], fms[slide_name], disThres=10, anchor_num=anchor_num, model_dim=model_dim)
+                # if not forVis: outputs = []
+                expseq = {'dataxy': seq_dataxy, 'datayx': seq_datayx, 'mins': _mins, 'maxs': _maxs, 'outputxy': seq_outputxy, 'outputyx': seq_outputyx}
                 torch.save(expseq, os.path.join(seq_root, slide_name + '.pth'))
                 del yolos[slide_name], fms[slide_name]
         print(datetime.datetime.now()-start)
@@ -414,14 +414,14 @@ def evaluate(model, list_path, iou_thres, conf_thres, nms_thres, img_size, batch
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=1, help="size of each image batch")
-    # parser.add_argument("--model_def", type=str, default="%s/config/yolov3-sRMB-v02.cfg" % _ROOT_, help="path to model definition file")
-    # parser.add_argument("--weights_path", type=str, default="%s/sRMBv02/yolov3_custom_best.pth" % _ROOT_, help="path to weights file")
+    parser.add_argument("--model_def", type=str, default="%s/config/yolov3-sRMB-v02.cfg" % _ROOT_, help="path to model definition file")
+    parser.add_argument("--weights_path", type=str, default="%s/sRMBv02/yolov3_custom_best.pth" % _ROOT_, help="path to weights file")
     # parser.add_argument("--weights_path", type=str, default="%s/sRMBv02/yolov3_ckpt_step_1119998.pth" % _ROOT_, help="path to weights file")
     # parser.add_argument("--weights_path", type=str, default="%s/sRMBv02-cls/yolov3_ckpt_step_1649998.pth" % _ROOT_, help="if specified starts from checkpoint model")
     # parser.add_argument("--model_def", type=str, default="%s/yolo-tiny/yolov3-tiny.cfg" % _ROOT_, help="path to model definition file")
     # parser.add_argument("--weights_path", type=str, default="%s/yolo-tiny/yolo-tiny-epoch80.pth" % _ROOT_, help="path to weights file")
-    parser.add_argument("--model_def", type=str, default="%s/config/yolov3-custom.cfg" % _ROOT_, help="path to model definition file")
-    parser.add_argument("--weights_path", type=str, default="%s/darknet53_pcdd1024/yolov3_ckpt_step_349998-the_best_one.pth" % _ROOT_, help="path to weights file")
+    # parser.add_argument("--model_def", type=str, default="%s/config/yolov3-custom.cfg" % _ROOT_, help="path to model definition file")
+    # parser.add_argument("--weights_path", type=str, default="%s/darknet53_pcdd1024/yolov3_ckpt_step_349998-the_best_one.pth" % _ROOT_, help="path to weights file")
     # parser.add_argument("--model_def", type=str, default="%s/config/csresnext50-panet-spp.cfg" % _ROOT_, help="path to model definition file")
     # parser.add_argument("--weights_path", type=str, default="%s/det/CSPresnext50_pcdd1024/yolov3_ckpt_step_349998-the_best_one.pth" % _ROOT_, help="path to weights file")
     parser.add_argument("--data_config", type=str, default="%s/config/pcdd1024.data" % _ROOT_, help="path to data config file")
@@ -432,7 +432,7 @@ if __name__ == "__main__":
     parser.add_argument("--conf_thres", type=float, default=0.5, help="object confidence threshold")
     parser.add_argument("--nms_thres", type=float, default=0.3, help="iou thresshold for non-maximum suppression")
     parser.add_argument("--n_cpu", type=int, default=0, help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=6944, help="size of each image dimension")
+    parser.add_argument("--img_size", type=int, default=10400, help="size of each image dimension")
     parser.add_argument("--overlap", type=int, default=0, help="size of each image dimension")
     parser.add_argument("--debug_mode", type=bool, default=False, help="size of each image dimension")
     parser.add_argument("--old_version", type=bool, default=False, help="size of each image dimension")
@@ -443,21 +443,21 @@ if __name__ == "__main__":
     # parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy_no_seq_manualcheck_list (xyw).txt' % _ROOT_, help="size of each image dimension")
     # parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy1&2_all_slide_list.txt' % _ROOT_, help="size of each image dimension")
     # parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy1&2_all_slide_list_mrxs.txt' % _ROOT_, help="size of each image dimension")
-    parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy1&2_all_slide_list_92mrxs.txt' % _ROOT_, help="size of each image dimension")
+    # parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy1&2_all_slide_list_92mrxs.txt' % _ROOT_, help="size of each image dimension")
     # parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy3456789_sequencesicnNewXYconversedisconserve0.txt' % _ROOT_, help="size of each image dimension")
-    # parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy_all_slide_list.txt' % _ROOT_, help="size of each image dimension")
+    parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy_all_slide_list.txt' % _ROOT_, help="size of each image dimension")
     # parser.add_argument("--valid_path", type=str, default='%s/data_sets/sfy1&2_sequencesyolotinyNewXYconversedisconserve0.txt' % _ROOT_, help="size of each image dimension")
     parser.add_argument("--name", type=str, default='goldtest', help="size of each image dimension")
     opt = parser.parse_args()
     print(opt)
-    os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+    os.environ['CUDA_VISIBLE_DEVICES'] = "3"
     opt.valid_path = determinating_path(opt.valid_path)
     opt.model_def = determinating_path(opt.model_def)
     opt.weights_path = determinating_path(opt.weights_path)
     opt.data_config = determinating_path(opt.data_config)
     opt.class_path = determinating_path(opt.class_path)
     global isMNV2, forVis, isMRXS
-    isMNV2, forVis, isMRXS, isFLOPs = True, False, True, False
+    isMNV2, forVis, isMRXS, isFLOPs = False, False, True, False
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # device = torch.device("cpu")
     valid_path = opt.valid_path
@@ -467,7 +467,7 @@ if __name__ == "__main__":
     # valid_path = 'W:/wei/PCDD_all/data_sets/sfy1&2_slide_val_list-for_160.txt'
     # Initiate model
     if not isMNV2:
-        model = Darknet(opt.model_def, img_size=opt.img_size, lite_mode='yolov3' not in opt.model_def, use_final_loss=True, debug_mode=opt.debug_mode, old_version='tiny' in opt.model_def).to(device)
+        model = Darknet(opt.model_def, img_size=opt.img_size, lite_mode=False, use_final_loss=True, debug_mode=opt.debug_mode, old_version='tiny' in opt.model_def).to(device)
         
 
         if opt.weights_path.endswith(".weights"):
