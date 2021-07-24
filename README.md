@@ -10,4 +10,4 @@ Codes Available of Paper, An Efficient Cervical Whole Slide Image Analysis Frame
 - [x] Models available - See `det-WSI-level/README.md`
 - [ ] Data available
 
-![graphic abstract](graph-abstract-v2.pdf)
+![graphic abstract](graph-abstract.jpg)
