@@ -1,4 +1,5 @@
 # You-Only-Look-Cytopathology-Once
+
 Codes Available of Paper, An Efficient Cervical Whole Slide Image Analysis Framework Based on Multi-scale Semantic and Spatial Deep Features. [arXiv:2106.15113](https://arxiv.org/abs/2106.15113)
 
 - [x] Patch level classification `cls-patch-level/`
@@ -8,3 +9,5 @@ Codes Available of Paper, An Efficient Cervical Whole Slide Image Analysis Frame
 - [x] WSI level feature extraction `det-WSI-level/`
 - [x] Models available - See `det-WSI-level/README.md`
 - [ ] Data available
+
+![graphic abstract](graph-abstract-v2.pdf)
