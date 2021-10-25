@@ -2,7 +2,7 @@
 
 Codes Available of Paper, An Efficient Cervical Whole Slide Image Analysis Framework Based on Multi-scale Semantic and Spatial Deep Features. [arXiv:2106.15113](https://arxiv.org/abs/2106.15113)
 
-### Try it by yourself: [Colab] (https://colab.research.google.com/drive/1-qvoLT18kf_6Of8BpaMfCvxvwfeyy1sw?usp=sharing)
+### Try it by yourself: [Colab](https://colab.research.google.com/drive/1-qvoLT18kf_6Of8BpaMfCvxvwfeyy1sw?usp=sharing)
 
 - [x] Patch level classification `cls-patch-level/`
 - [x] Patch level detection `det-patch-level/`
