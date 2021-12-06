@@ -135,8 +135,8 @@ at::Tensor compute_one_slide(
 
 
 int main(int argc, const char* argv[]) {
-  if (argc < 4) {
-    std::cerr << "usage: example-app <tile-side> <path-to-detector-model> <SVS-path1> <SVS-path2> ...\n";
+  if (argc < 5) {
+    std::cerr << "usage: main <tile-side> <path-to-detector-model> <path-to-classifier-model> <SVS-path1> [<SVS-path2>...]\n";
     return -1;
   }
   
