@@ -3,7 +3,7 @@
 OS: Linux
 
 Dependencies:
- - Libtorch=1.0
+ - Libtorch
  - openslide
 
 Install:
