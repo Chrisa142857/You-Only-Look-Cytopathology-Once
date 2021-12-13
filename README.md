@@ -10,7 +10,7 @@ Example of feature maps can be found here: [Colab](https://colab.research.google
 - [x] WSI level classification `cls-WSI-level/`
 - [x] WSI level feature extraction `det-WSI-level/`
 - [x] Models available - See `det-WSI-level/README.md`
-- [ ] C++ release version
+- [x] C++ release version
 - [ ] Data available
 
 ## Graphic Abstract
