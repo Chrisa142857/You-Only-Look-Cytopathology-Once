@@ -30,7 +30,7 @@ cmake --build ..
 
 ## Usage
 ```
-Usage: build/main [options] input_slides 
+Usage: main [options] input_slides 
 
 Positional arguments:
 input_slides                    list of input slide path
@@ -47,6 +47,8 @@ Optional arguments:
 -o --output_dir                 specify the output dir. [default: "./outputs/"]
 -dthr --detector_thres          set detector conf thres [default: "0.5"]
 -nmsthr --nms_thres             set nms iou thres [default: "0.1"]
+-nclass --num_class             num_class [default: "1"]
+--normalize                     normalize the input image (unused in yolco) [default: false]
 --half                          half precision [default: false]
 --only_det                      do only the detection [default: false]
 --save_feature                  save the feature sequence of WSI [default: false]
