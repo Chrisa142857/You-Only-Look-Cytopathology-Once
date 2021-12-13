@@ -51,9 +51,10 @@ slide_loader::slide_loader()
 
 slide_loader::~slide_loader()
 {
-    if (slide) {
-	    openslide_close(slide);
-        slide=nullptr;
+    try {
+        openslide_close(slide);
+    } catch (const char * a) {
+        return;
     }
 }
 
@@ -75,8 +76,8 @@ void slide_loader::preload_tile_location(bool only_fg)
     Params[0].xlist = new int64_t[x_num * y_num];
     Params[0].ylist = new int64_t[x_num * y_num];
     int i = 0;
-    for (int64_t x=x_start; x<x_end; x+=Params[0].tileW) {
-        for (int64_t y=y_start; y<y_end; y+=Params[0].tileH) {
+    for (int64_t x=x_start; x<=x_end-Params[0].tileW; x+=Params[0].tileW) {
+        for (int64_t y=y_start; y<=y_end-Params[0].tileH; y+=Params[0].tileH) {
             Params[0].xlist[i] = x + boundx;
             Params[0].ylist[i] = y + boundy;
             i += 1;
@@ -92,13 +93,13 @@ void slide_loader::preload_tile_location(bool only_fg)
     
 }
 
-void slide_loader::loop_loader(std::vector<at::Tensor> *inputs){
+void slide_loader::loop_loader(std::vector<input_object> *inputs){
     while (true) {
         at::Tensor input;
         int flag = this->load_one_tensor(&input);
         if (flag == 0)
-            break;
-        (*inputs).push_back(input);
+            break;        
+        (*inputs).push_back(input_object(input, Params[0].xlist[current_id-1], Params[0].ylist[current_id-1]));
     }
 }
 
@@ -107,17 +108,11 @@ int slide_loader::load_one_tensor(at::Tensor* inputs)
     if (current_id < start_id || current_id >= end_id) {
         return 0;
     }
-    // tile_obj object;
-    // object.x = xlist[current_id];
-    // object.y = ylist[current_id];
-    // object.w = tileW;
-    // object.h = tileH;
-    // object.level = level;
     uint32_t* tile = new uint32_t[Params[0].tileW * Params[0].tileH * 4];
     openslide_read_region(slide, tile, Params[0].xlist[current_id], Params[0].ylist[current_id], Params[0].level, Params[0].tileW, Params[0].tileH);
     current_id += 1;
     // *********************************************************************
-    // 对值: 根据opencv确认数据类型正确的从openslide变为torch
+    // Check Values: Is data correctly transfered from openslide to torch using opencv
     // cv::Mat image = cv::Mat(tileH, tileW, CV_8UC4, tile, cv::Mat::AUTO_STEP).clone();
     // cv::Mat img;
     // cv::cvtColor(image, img, cv::COLOR_RGBA2RGB);
@@ -136,7 +131,7 @@ int slide_loader::load_one_tensor(at::Tensor* inputs)
     *inputs = (*inputs).slice(/*dim=*/3, /*start=*/0, /*end=*/3).transpose(1, 3).transpose(2, 3); // 取RGB、[N, W, H, C] -> [N, C, H, W]
     *inputs /= 255.0; 
     // *********************************************************************
-    // 对值
+    // Check Values
     // std::cout << inputs.slice(/*dim=*/1, /*start=*/0, /*end=*/1).slice(/*dim=*/2, /*start=*/0, /*end=*/10).slice(/*dim=*/3, /*start=*/0, /*end=*/10) << '\n';
     // std::cout << "mean of R " << inputs.slice(/*dim=*/1, /*start=*/0, /*end=*/1).mean();
     // std::cout << "mean of G " << inputs.slice(/*dim=*/1, /*start=*/1, /*end=*/2).mean();

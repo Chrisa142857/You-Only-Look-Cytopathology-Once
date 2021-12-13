@@ -1,0 +1,8 @@
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/install/local.dir
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/install.dir
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/list_install_components.dir
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/rebuild_cache.dir
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/edit_cache.dir
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/install/strip.dir
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/tile_slide.dir
+/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build/CMakeFiles/main.dir

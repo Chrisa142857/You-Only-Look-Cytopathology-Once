@@ -20,6 +20,20 @@ class slide_params {
         };
 };
 
+
+class input_object {
+    public:
+        at::Tensor input;
+        int64_t samplex;
+        int64_t sampley;
+        input_object(at::Tensor i, int64_t x, int64_t y){
+            input = i;
+            samplex = x;
+            sampley = y;
+        };
+};
+
+
 class slide_loader {
     private:
         void preload_tile_location(bool use_fore_g);
@@ -42,7 +56,7 @@ class slide_loader {
         ~slide_loader(); // kill all loaders
         void print_all_property();
         int load_one_tensor(at::Tensor* inputs);
-        void loop_loader(std::vector<at::Tensor> *inputs);
+        void loop_loader(std::vector<input_object> *inputs);
         void split_loader(slide_loader *subloader, int start, int end);// for multiple loader
 };
 

@@ -2,7 +2,15 @@
 #include <torch/torch.h>
 #include <openslide/openslide.h>
 #include <c10/cuda/CUDACachingAllocator.h>
+// #include <torchvision/ops/cpu/roi_align_common.h>
+// #include <torchvision/ops/ops.h>
+#include <torchvision/ops/nms.h>
+
+#include "argparse/argparse.hpp"
 #include "tile_slide.h"
+#include "timer.cpp"
+
+#include <fstream>
 #include <iostream>
 #include <stdlib.h>
 #include <memory>
@@ -22,153 +30,315 @@ std::string StringReplace(std::string str, const std::string& from, const std::s
 
 at::Tensor compute_final_class(torch::jit::script::Module classifier, at::Tensor input) {
   at::Tensor output = classifier.forward({input.to(at::kCUDA)}).toTensor();
+  auto now_time = std::chrono::system_clock::now();
+  std::time_t current_time = std::chrono::system_clock::to_time_t(now_time);
+  std::cout<<"Classification End at "<<std::ctime(&current_time)<<"\n";
   return output;
 }
 
-at::Tensor feature_postproc(at::IValue out) {
-  // TODO : gather location of top-N boxes & NMS
+at::Tensor feature_postproc(at::IValue out, bool half_prec) {
   at::IValue feature_ivalue = out.toList()[1];
   at::Tensor feature_tensor = feature_ivalue.toTensor().to(at::kCPU); // N x Length x Channel
+  if (half_prec) 
+    feature_tensor = feature_tensor.to(at::kFloat);
   return feature_tensor;
 }
 
-void print_time_usage(clock_t previous_time, const char* str){
-  clock_t present_time = clock();
-  double time_len = ((double)(present_time-previous_time)/CLOCKS_PER_SEC)*1000;
-  std::cout<<str<<" used "<<time_len<<"ms"<<"\n";
+void det_postproc(at::IValue out, std::string save_name, bool half_prec, float conf_thres, float iou_thres) {
+  int fg_score_dim = 4;
+  int cls_score_dim = 5;
+  at::IValue det_ivalue = out.toList()[0];
+  at::Tensor det_tensor = det_ivalue.toTensor().squeeze().to(at::kCPU); // N x Length x Channel
+  at::Tensor score = det_tensor.slice(-1, fg_score_dim, fg_score_dim+1) * det_tensor.slice(-1, cls_score_dim, cls_score_dim+1);
+  score = score.squeeze();
+  at::Tensor ind = at::where(score > conf_thres)[0];
+  score = score.index_select(0, ind);
+  at::Tensor box = det_tensor.slice(-1, 0, 4).squeeze().index_select(0, ind);
+  at::Tensor nms_ind = vision::ops::nms(box, score, iou_thres);
+  det_tensor = at::cat(at::TensorList({box.index_select(0, nms_ind), score.index_select(0, nms_ind).unsqueeze(-1)}), -1);
+  if (half_prec) 
+    det_tensor = det_tensor.to(at::kFloat);
+  std::ofstream save_file;
+  save_file.open(save_name.c_str());
+  save_file << det_tensor;
+  save_file.close();
+}
+
+void print_current_time(){
+    auto now_time = std::chrono::high_resolution_clock::now();
+    std::time_t current_time = std::chrono::high_resolution_clock::to_time_t(now_time);
+    std::cout<<std::ctime(&current_time)<<"\n";
 }
 
 at::Tensor compute_one_slide(
-  int tileside=8288, 
-  const char* svs_path="/mnt/sda_8t/WSI_SVS/sfy4/positive/1157108 0893020.svs", 
-  torch::jit::script::Module module=torch::jit::load("../../get_model_cpp/detector_yolco_input1x3x8288x8288.pt"),
-  int thread_num=4,
-  bool verbose=false,
-  const char* save_path="/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/output/features",
-  int top_n=100,
-  bool save_sequence=true
+  int tileside, //=8288
+  const char* svs_path, //="/mnt/sda_8t/WSI_SVS/sfy4/positive/1157108 0893020.svs", 
+  torch::jit::script::Module module, //=torch::jit::load("../../get_model_cpp/detector_yolco_input1x3x7264x7264.pt"),
+  int thread_num, //=4,
+  bool verbose, //=true,
+  const char* save_path, //="/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/output/features",
+  int top_n, //=100,
+  float det_conf_thres,
+  float nms_iou_thres,
+  bool save_sequence, //=false,
+  bool half_prec, //=false
+  bool only_det
 ){
-  // 计时
-  clock_t _start, _end;
-  _start = clock();
-  double data_endtime = 0, model_endtime = 0;
   // data-loading ***************************
   slide_params slideParams(/*tile w=*/tileside, /*tile h=*/tileside, /*level=*/0);
   slide_loader loader(svs_path, &slideParams);
-  if (verbose)
-    loader.print_all_property();
   slide_loader *subloaders = new slide_loader[thread_num];
   for (int i=0; i<thread_num; i++)
     loader.split_loader(subloaders + i, (int) (loader.end_id/4) * i, (int) (loader.end_id/4) * (i+1));
-  std::vector<at::Tensor> input_list;
+  std::vector<input_object> input_list;
   std::vector<std::future<void>> thread_handle(sizeof(std::future<void>) * thread_num);
   for (int i=0; i<thread_num; i++) 
     thread_handle[i] = std::async(std::launch::async, &slide_loader::loop_loader, subloaders+i, &input_list);
-  std::vector<std::future<at::Tensor>> async_postproc(sizeof(std::future<at::Tensor>) * loader.end_id);
-  _end = clock();
-  if (verbose)
-    std::cout<<"Init time:"<<((double)(_end-_start)/CLOCKS_PER_SEC)*1000<<"ms"<< '\n';
-  else {
-    auto now_time = std::chrono::system_clock::now();
-    std::time_t current_time = std::chrono::system_clock::to_time_t(now_time);
-    std::cout<<svs_path<<"\n";
-    std::cout<<"Start at "<<std::ctime(&current_time)<<"\n";
-  }
-  clock_t present_time = clock();
+  std::vector<std::future<at::Tensor>> async_postproc;
+  std::vector<std::future<void>> async_postproc_det;
+  if (only_det != true)
+    async_postproc = std::vector<std::future<at::Tensor>>(sizeof(std::future<at::Tensor>) * loader.end_id);
+  async_postproc_det = std::vector<std::future<void>>(sizeof(std::future<void>) * loader.end_id);
+  std::cout<<svs_path<<"\nStart at ";
+  print_current_time();
+  Timer timer_var, timer_whole, timer_delay;
+  double infer_time = 0, data_time = 0;
   // wsi-processing ***************************
   int current_postproc = 0;
   at::IValue out;
+  double delay_time = 0;
   while(current_postproc < loader.end_id) {
     if (input_list.size() > current_postproc) {
+      input_object obj = input_list[current_postproc];
+      at::Tensor input = obj.input;
+      int64_t samplex = obj.samplex;
+      int64_t sampley = obj.sampley;
       if (verbose) {
-        print_time_usage(present_time, "\nstart getting tile");
-        present_time = clock();
+        data_time += timer_var.elapsed();
+        timer_var.reset();
       }
-      at::Tensor input = input_list[current_postproc];
-      if (verbose) {
-        print_time_usage(present_time, "end getting tile");
-        present_time = clock();
-        print_time_usage(present_time, "\nstart infer");
-        present_time = clock();
-      }
+      if (half_prec)
+        input = input.to(at::kHalf);
+      
+      // std::cout<<"Computing x:"<<samplex<<" y:"<<sampley<<"\n";
       out = module.forward({input.to(at::kCUDA)});
-      if (verbose) {
-        print_time_usage(present_time, "end infer");
-        present_time = clock();
-        print_time_usage(present_time, "\nstart postprocessing");
-        present_time = clock();
+      // std::cout<<"Computed x:"<<samplex<<" y:"<<sampley<<"\n";
+      if (only_det == true) {
+        std::string svs_name = std::string(svs_path + std::string(svs_path).find_last_of('/'));
+        std::string save_name = std::string(save_path) + StringReplace(
+          svs_name, 
+          std::string(".svs"), 
+          std::string("_x") + std::to_string(samplex) + std::string("_y") + std::to_string(sampley) + std::string(".txt")
+        );
+        // if (current_postproc > thread_num)
+        //   for (int i=0; i<thread_num; i++)
+        //     async_postproc_det[i].get();
+        async_postproc_det[current_postproc] = std::async(std::launch::async, &det_postproc, out, save_name, half_prec, det_conf_thres, nms_iou_thres);// async post-processing
+      } else {
+        async_postproc[current_postproc] = std::async(std::launch::async, &feature_postproc, out, half_prec);// async post-processing
       }
-      async_postproc[current_postproc] = std::async(std::launch::async, &feature_postproc, out);// 异步后处理
-      if (verbose) {
-        print_time_usage(present_time, "end postprocessing");
-        present_time = clock();
-      }
+      // input_list[current_postproc] = input_object(torch::empty({0}), 0, 0);
       current_postproc += 1;
-      // TODO: erase computed input from input_list
-      // input = input_list.erase(input);
+      if (verbose) {
+        infer_time += timer_var.elapsed();
+        timer_var.reset();
+      }
+      delay_time = 0;
+      timer_delay.reset();
+    } else {
+      double pre_delay_time = delay_time;
+      delay_time += timer_delay.elapsed();
+      timer_delay.reset();
+      if (pre_delay_time != delay_time)
+        std::cout<<"delay_time "<<delay_time<<"ms\n";
+    }
+    if (delay_time > 3000){
+      break;
     }
   }
+  if (verbose) {
+    std::cout<<"infer mean time "<<infer_time / current_postproc<<" ms\n";
+    std::cout<<"data mean time "<<data_time / current_postproc<<" ms\n";
+    std::cout<<"end all tiles "<<timer_whole.elapsed()<<" ms\n";
+  }
+  // input_list.clear();
   // post-processing ***************************
-  clock_t start = clock();
-  std::vector<at::Tensor> outputs;//(at::Tensor) 
-  for (int i=0; i<loader.end_id; i++) {
-    outputs.push_back(async_postproc[i].get());
+  at::Tensor output;
+  if (only_det == true) {
+    if (verbose)
+      timer_var.reset();
+    for (int i=0; i<loader.end_id; i++) {
+      async_postproc_det[i].get();
+    }
+    if (verbose) 
+      std::cout<<"post-processing "<<timer_var.elapsed()<<" ms\n";
+    output = torch::empty({0});
+  } else {
+    if (verbose)
+      timer_var.reset();
+    std::vector<at::Tensor> outputs;//(at::Tensor) 
+    for (int i=0; i<loader.end_id; i++) {
+      outputs.push_back(async_postproc[i].get());
+    }
+    output = torch::cat(at::TensorList(outputs), 1);
+    at::Tensor index = output.slice(-1, 768, 769).argsort(/*dim=*/1, /*descending=*/true).squeeze();
+    output = output.index_select(1, index.slice(0, 0, top_n)); // gather features of top-N boxes
+    if (verbose) 
+      std::cout<<"post-processing "<<timer_var.elapsed()<<" ms\n";
+    // Save features  *****************************
+    if (save_sequence) {
+      if (verbose)
+        timer_var.reset();
+      std::string svs_name = std::string(svs_path + std::string(svs_path).find_last_of('/'));
+      std::string save_name = std::string(save_path) + StringReplace(svs_name, std::string(".svs"), std::string(".pt"));
+      torch::save(output, save_name.c_str());
+      if (verbose)
+        std::cout<<"save feature seq "<<timer_var.elapsed()<<" ms\n";
+    }
+    // *************************************
   }
-  at::Tensor output = torch::cat(at::TensorList(outputs), 1);
-  at::Tensor index = output.slice(-1, 768, 769).argsort(/*dim=*/1, /*descending=*/true).squeeze();
-  output = output.index_select(1, index.slice(0, 0, top_n)); // gather features of top-N boxes
-  clock_t end = clock();
-  if (verbose)
-    std::cout<<"Post-processing time:"<<((double)(end-start)/CLOCKS_PER_SEC)*1000<<"ms"<< '\n';
-  // Save .pt  *****************************
-  if (save_sequence) {
-    std::string svs_name = std::string(svs_path + std::string(svs_path).find_last_of('/'));
-    std::string save_name = std::string(save_path) + StringReplace(svs_name, std::string(".svs"), std::string(".pt"));
-    torch::save(output, save_name.c_str());
-  }
-  // *************************************
-  auto now_time = std::chrono::system_clock::now();
-  std::time_t current_time = std::chrono::system_clock::to_time_t(now_time);
-  std::cout<<"End at "<<std::ctime(&current_time)<<"\n";
+  std::cout<<"\nDetection End at ";
+  print_current_time();
   return output;
 }
 
 
 int main(int argc, const char* argv[]) {
-  if (argc < 5) {
-    std::cerr << "usage: main <tile-side> <path-to-detector-model> <path-to-classifier-model> <SVS-path1> [<SVS-path2>...]\n";
-    return -1;
+  argparse::ArgumentParser program("main");
+  program.add_argument("-s", "--input_side")
+    .help("side length of input tile image")
+    .required()
+    .default_value(std::string("5120")); 
+  program.add_argument("-c", "--classifier")
+    .help("classifier's path")
+    .required()
+    .default_value(std::string("../get_model_cpp/classifier_transformer_input1x100x768.pt")); 
+  program.add_argument("-d", "--detector")
+    .help("detector's path")
+    .required()
+    .default_value(std::string("../../model_zoo/detector_yolox_l_input1x3x5120x5120.pt")); 
+  program.add_argument("-cthr", "--classifier_thres")
+    .help("set classifier conf thres")
+    .required()
+    .default_value(std::string("0.184")); 
+  program.add_argument("--thread_num")
+    .help("thread number for data loader")
+    .required()
+    .default_value(std::string("4")); 
+  program.add_argument("--feature_num")
+    .help("feature sequence number to classifer (need to be the same as classifier's input size)")
+    .required()
+    .default_value(std::string("100")); 
+  program.add_argument("-o", "--output_dir")
+    .help("specify the output dir.")
+    .required()
+    .default_value(std::string("./outputs/"));
+  program.add_argument("-dthr", "--detector_thres")
+    .help("set detector conf thres")
+    .required()
+    .default_value(std::string("0.5")); 
+  program.add_argument("-nmsthr", "--nms_thres")
+    .help("set nms iou thres")
+    .required()
+    .default_value(std::string("0.1")); 
+  program.add_argument("--half")
+    .help("half precision")
+    .default_value(false)
+    .implicit_value(true); 
+  program.add_argument("--only_det")
+    .help("do only the detection")
+    .default_value(false)
+    .implicit_value(true); 
+  program.add_argument("--save_feature")
+    .help("save the feature sequence of WSI")
+    .default_value(false)
+    .implicit_value(true); 
+  program.add_argument("--verbose")
+    .help("display the verbose info")
+    .default_value(false)
+    .implicit_value(true); 
+  program.add_argument("input_slides")
+    .help("list of input slide path")
+    .remaining();
+  
+  try {
+    program.parse_args(argc, argv);
+  }
+  catch (const std::runtime_error& err) {
+    std::cerr << "Error throwed in argparse" << std::endl;
+    std::cerr << err.what() << std::endl;
+    std::cerr << program;
+    std::exit(1);
   }
   
+  // std::filesystem::create_directory(program["--output_dir"]);
   torch::jit::script::Module module, classifier;
-  torch::NoGradGuard no_grad;
   // at::Tensor example;
+  bool is_only_det = program.get<bool>("--only_det");
+  std::string detector_path = program.get<std::string>("--detector");
+  std::string classifier_path = program.get<std::string>("--classifier");
+  std::string output_dir = program.get<std::string>("--output_dir");
+  std::cout<<"detector_path: "<<detector_path<<"\n";
+  if (is_only_det != true) {
+    std::cout<<"classifier_path: "<<classifier_path<<"\n";
+  }
+  std::cout<<"is_only_det: "<<is_only_det<<"\n";
+  std::cout<<"output_dir: "<<output_dir<<"\n";
   try {
     // Deserialize the ScriptModule from a file using torch::jit::load().
-    // module = torch::jit::load("../../get_model_cpp/detector_yolco_input1x3x8288x8288.pt");
-    // classifier = torch::jit::load("/home/weiziquan/WSI_analysis/release_yolco/get_model_cpp/classifier_transformer_input1x100x768.pt");
-    module = torch::jit::load(argv[2]);
-    classifier = torch::jit::load(argv[3]);
-    // example = classifier.forward({torch::randn({1, 100, 768}).to(at::kCUDA)}).toTensor();
+    module = torch::jit::load(detector_path.c_str());
+    if (is_only_det != true) {
+      classifier = torch::jit::load(classifier_path.c_str());
+    }
   }
   catch (const c10::Error& e) {
+    std::cerr << e.what() << std::endl;
     std::cerr << "error loading the model\n";
     return -1;
   }
 
-  // std::vector<at::Tensor> feature_sequences = {compute_one_slide()};
-  // int sliden = 1;
-  std::vector<at::Tensor> feature_sequences;
-  int sliden = 0;
-  while (sliden+4 < argc){
-    feature_sequences[sliden] = compute_one_slide(atoi(argv[1]), argv[sliden+4], module);
-    sliden += 1;
-    c10::cuda::CUDACachingAllocator::emptyCache();
+  if (program["--half"] == true)
+    std::cout<<"using Half precision\n";
+  std::vector<std::string> files = program.get<std::vector<std::string>>("input_slides");
+  if (files.size() == 0) {
+    std::cerr << "No WSI is provided\n";
+    return -1;
   }
-  for (int i=0; i<sliden; i++) {
-    at::Tensor score = compute_final_class(classifier, feature_sequences[i].slice(2, 0, 768)).to(at::kCPU);
-    std::cout<<argv[i + 4]<<" has LABEL <1>"<<"\n";
-    std::cout<<"model gives SCORE <"<<score.squeeze().slice(0, 99, 100)<<">\n";
+  std::cout << files.size() << " WSI files provided" << std::endl;
+  int input_side = stoi(program.get<std::string>("--input_side"));
+  int thread_num = stoi(program.get<std::string>("--thread_num"));
+  int feature_num = stoi(program.get<std::string>("--feature_num"));
+  float cls_thres = stof(program.get<std::string>("--classifier_thres"));
+  float det_thres = stof(program.get<std::string>("--detector_thres"));
+  float nms_thres = stof(program.get<std::string>("--nms_thres"));
+  for (std::string& file : files) {
+    torch::NoGradGuard no_grad;
+    at::Tensor feature_sequence = compute_one_slide(
+      input_side, 
+      file.c_str(), 
+      module, 
+      thread_num,
+      program["--verbose"] == true, 
+      output_dir.c_str(),
+      feature_num,
+      det_thres,
+      nms_thres,
+      program["--save_feature"] == true,
+      program["--half"] == true,
+      is_only_det == true//program["--only_det"] == true
+    ).detach();
+    c10::cuda::CUDACachingAllocator::emptyCache();
+    if (program["--only_det"] == true)
+      continue;
+    at::Tensor score = compute_final_class(classifier, feature_sequence.slice(2, 0, 768)).to(at::kCPU).squeeze().slice(0, 99, 100).detach();
+    c10::cuda::CUDACachingAllocator::emptyCache();
+    std::string pred;
+    if (score.item<float>() >= cls_thres) 
+      pred = std::string("positive");
+    else
+      pred = std::string("negative");
+    std::cout<<"**********************\n"<<file<<" has LABEL <1>"<<"\n";
+    std::cout<<"model gives CLASS <"<<pred<<">\n**********************\n";
   }
   
   return 0;

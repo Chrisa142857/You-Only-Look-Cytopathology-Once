@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build",
+  "command": "/bin/x86_64-linux-gnu-g++-10 -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -isystem ../libtorch/include -isystem ../libtorch/include/torch/csrc/api/include -isystem /usr/local/cuda/include -g   -I/usr/local/include/openslide -D_GLIBCXX_USE_CXX11_ABI=0 -o CMakeFiles/tile_slide.dir/tile_slide.cpp.o -c /home/weiziquan/WSI_analysis/release_yolco/torch_cpp/tile_slide.cpp",
+  "file": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/tile_slide.cpp"
+},
+{
+  "directory": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build",
+  "command": "/bin/x86_64-linux-gnu-g++-10 -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -isystem ../libtorch/include -isystem ../libtorch/include/torch/csrc/api/include -isystem /usr/local/cuda/include -isystem /home/weiziquan/miniconda3/include/python3.9 -g   -I/usr/local/include/openslide -D_GLIBCXX_USE_CXX11_ABI=0 -std=gnu++17 -o CMakeFiles/main.dir/main.cpp.o -c /home/weiziquan/WSI_analysis/release_yolco/torch_cpp/main.cpp",
+  "file": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/main.cpp"
+},
+{
+  "directory": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build",
+  "command": "/bin/x86_64-linux-gnu-g++-10 -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -isystem ../libtorch/include -isystem ../libtorch/include/torch/csrc/api/include -isystem /usr/local/cuda/include -isystem /home/weiziquan/miniconda3/include/python3.9 -g   -I/usr/local/include/openslide -D_GLIBCXX_USE_CXX11_ABI=0 -std=gnu++17 -o CMakeFiles/main.dir/tile_slide.cpp.o -c /home/weiziquan/WSI_analysis/release_yolco/torch_cpp/tile_slide.cpp",
+  "file": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/tile_slide.cpp"
+},
+{
+  "directory": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/build",
+  "command": "/bin/x86_64-linux-gnu-g++-10 -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE -isystem ../libtorch/include -isystem ../libtorch/include/torch/csrc/api/include -isystem /usr/local/cuda/include -isystem /home/weiziquan/miniconda3/include/python3.9 -g   -I/usr/local/include/openslide -D_GLIBCXX_USE_CXX11_ABI=0 -std=gnu++17 -o CMakeFiles/main.dir/timer.cpp.o -c /home/weiziquan/WSI_analysis/release_yolco/torch_cpp/timer.cpp",
+  "file": "/home/weiziquan/WSI_analysis/release_yolco/torch_cpp/timer.cpp"
+}
+]
