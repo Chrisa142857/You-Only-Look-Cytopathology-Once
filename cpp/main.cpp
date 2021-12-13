@@ -83,16 +83,26 @@ at::Tensor compute_one_slide(
   bool save_sequence, //=false,
   bool half_prec, //=false
   bool only_det
-){
+  ){
   // data-loading ***************************
   slide_params slideParams(/*tile w=*/tileside, /*tile h=*/tileside, /*level=*/0);
   slide_loader loader(svs_path, &slideParams);
-  slide_loader *subloaders = new slide_loader[thread_num];
-  for (int i=0; i<thread_num; i++)
-    loader.split_loader(subloaders + i, (int) (loader.end_id/4) * i, (int) (loader.end_id/4) * (i+1));
+  int sub_len = (int) (loader.end_id/thread_num);
+  float loader_num_float = loader.end_id/(sub_len*1.0);
+  int loader_num = (int)std::ceil(loader_num_float);
+  slide_loader *subloaders = new slide_loader[loader_num];
+  for (int i=0; i<loader_num; i++) {
+    int sub_start = sub_len * i;
+    int sub_end = sub_len * (i+1);
+    if (sub_start > loader.end_id)
+      sub_start = loader.end_id;
+    if (sub_end > loader.end_id)
+      sub_end = loader.end_id;
+    loader.split_loader(subloaders + i, sub_start, sub_end);
+  }
   std::vector<input_object> input_list;
-  std::vector<std::future<void>> thread_handle(sizeof(std::future<void>) * thread_num);
-  for (int i=0; i<thread_num; i++) 
+  std::vector<std::future<void>> thread_handle(sizeof(std::future<void>) * loader_num);
+  for (int i=0; i<loader_num; i++) 
     thread_handle[i] = std::async(std::launch::async, &slide_loader::loop_loader, subloaders+i, &input_list);
   std::vector<std::future<at::Tensor>> async_postproc;
   std::vector<std::future<void>> async_postproc_det;
@@ -130,9 +140,6 @@ at::Tensor compute_one_slide(
           std::string(".svs"), 
           std::string("_x") + std::to_string(samplex) + std::string("_y") + std::to_string(sampley) + std::string(".txt")
         );
-        // if (current_postproc > thread_num)
-        //   for (int i=0; i<thread_num; i++)
-        //     async_postproc_det[i].get();
         async_postproc_det[current_postproc] = std::async(std::launch::async, &det_postproc, out, save_name, half_prec, det_conf_thres, nms_iou_thres);// async post-processing
       } else {
         async_postproc[current_postproc] = std::async(std::launch::async, &feature_postproc, out, half_prec);// async post-processing
@@ -325,7 +332,7 @@ int main(int argc, const char* argv[]) {
       nms_thres,
       program["--save_feature"] == true,
       program["--half"] == true,
-      is_only_det == true//program["--only_det"] == true
+      is_only_det == true //program["--only_det"] == true
     ).detach();
     c10::cuda::CUDACachingAllocator::emptyCache();
     if (program["--only_det"] == true)
