@@ -10,10 +10,9 @@ GPU: NVIDIA GeForce 1080Ti (11177 MB)
 CPU: Intel(R) Core(TM) i7-7820X CPU @ 3.60GHz (16 cores)
 RAM: 94 GB
 ```
+ - Example of feature maps can be found here: [Colab](https://colab.research.google.com/drive/1-qvoLT18kf_6Of8BpaMfCvxvwfeyy1sw?usp=sharing)
 
-
-Example of feature maps can be found here: [Colab](https://colab.research.google.com/drive/1-qvoLT18kf_6Of8BpaMfCvxvwfeyy1sw?usp=sharing)
-
+### Project Tree:
 - [x] Patch level classification `cls-patch-level/`
 - [x] Patch level detection `det-patch-level/`
 - [x] Qualitative results `qualitative-results/`
