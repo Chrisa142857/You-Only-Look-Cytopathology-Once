@@ -1,5 +1,16 @@
 #include "tile_slide.h"
 
+
+at::Tensor norm_image(at::Tensor x, int channel, float mean1, float mean2, float mean3, float std1, float std2, float std3) {
+    return at::cat(
+        at::TensorList({
+            (x.slice(channel, 0, 1) - mean1) / std1, 
+            (x.slice(channel, 1, 2) - mean2) / std2,
+            (x.slice(channel, 2, 3) - mean3) / std3
+        }), channel);
+}
+
+
 int get_os_property(openslide_t *slide, const char* propName)
 {
 	const char *property = openslide_get_property_value(slide, propName);
@@ -93,12 +104,14 @@ void slide_loader::preload_tile_location(bool only_fg)
     
 }
 
-void slide_loader::loop_loader(std::vector<input_object> *inputs){
+void slide_loader::loop_loader(std::vector<input_object> *inputs, bool normalize=false){
     while (true) {
         at::Tensor input;
         int flag = this->load_one_tensor(&input);
         if (flag == 0)
-            break;        
+            break;      
+        if (normalize==true)
+            input = norm_image(input, 1, 0.485, 0.456, 0.406, 0.229, 0.224, 0.225);
         (*inputs).push_back(input_object(input, Params[0].xlist[current_id-1], Params[0].ylist[current_id-1]));
     }
 }
@@ -128,7 +141,7 @@ int slide_loader::load_one_tensor(at::Tensor* inputs)
     // at::Tensor inputs = ToTensor(img).to(torch::kFloat32).transpose(1, 3);
     // *********************************************************************
     *inputs = torch::from_blob(tile, {1, Params[0].tileW, Params[0].tileH, 4}, torch::kByte).to(torch::kFloat32); // openslide (RGBA)
-    *inputs = (*inputs).slice(/*dim=*/3, /*start=*/0, /*end=*/3).transpose(1, 3).transpose(2, 3); // 取RGB、[N, W, H, C] -> [N, C, H, W]
+    *inputs = (*inputs).slice(/*dim=*/3, /*start=*/0, /*end=*/3).transpose(1, 3).transpose(2, 3); // get RGB: [N, W, H, C] -> [N, C, W, H]
     *inputs /= 255.0; 
     // *********************************************************************
     // Check Values

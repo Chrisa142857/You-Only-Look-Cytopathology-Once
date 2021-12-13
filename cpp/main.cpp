@@ -44,18 +44,34 @@ at::Tensor feature_postproc(at::IValue out, bool half_prec) {
   return feature_tensor;
 }
 
-void det_postproc(at::IValue out, std::string save_name, bool half_prec, float conf_thres, float iou_thres) {
+void det_postproc(at::IValue out, std::string save_name, bool half_prec, float conf_thres, float iou_thres, int num_class) {
   int fg_score_dim = 4;
   int cls_score_dim = 5;
   at::IValue det_ivalue = out.toList()[0];
-  at::Tensor det_tensor = det_ivalue.toTensor().squeeze().to(at::kCPU); // N x Length x Channel
-  at::Tensor score = det_tensor.slice(-1, fg_score_dim, fg_score_dim+1) * det_tensor.slice(-1, cls_score_dim, cls_score_dim+1);
+  at::Tensor det_tensor = det_ivalue.toTensor().squeeze().to(at::kCPU); // N x 7
+  auto max_tuple = det_tensor.slice(-1, cls_score_dim, cls_score_dim+num_class).max(1, true);
+  at::Tensor class_conf = std::get<0>(max_tuple);
+  at::Tensor class_pred = std::get<1>(max_tuple);
+  at::Tensor score = det_tensor.slice(-1, fg_score_dim, fg_score_dim+1) * class_conf;
   score = score.squeeze();
   at::Tensor ind = at::where(score > conf_thres)[0];
   score = score.index_select(0, ind);
+  class_pred = class_pred.index_select(0, ind);
   at::Tensor box = det_tensor.slice(-1, 0, 4).squeeze().index_select(0, ind);
+  box = at::cat(at::TensorList({
+    box.slice(-1, 0, 1) - box.slice(-1, 2, 3)/2,
+    box.slice(-1, 1, 2) - box.slice(-1, 3, 4)/2,
+    box.slice(-1, 0, 1) + box.slice(-1, 2, 3)/2,
+    box.slice(-1, 1, 2) + box.slice(-1, 3, 4)/2
+  }), -1);
   at::Tensor nms_ind = vision::ops::nms(box, score, iou_thres);
-  det_tensor = at::cat(at::TensorList({box.index_select(0, nms_ind), score.index_select(0, nms_ind).unsqueeze(-1)}), -1);
+  det_tensor = at::cat(
+    at::TensorList({
+      box.index_select(0, nms_ind), 
+      score.index_select(0, nms_ind).unsqueeze(-1), 
+      class_pred.index_select(0, nms_ind)
+      }), -1
+    );
   if (half_prec) 
     det_tensor = det_tensor.to(at::kFloat);
   std::ofstream save_file;
@@ -80,9 +96,11 @@ at::Tensor compute_one_slide(
   int top_n, //=100,
   float det_conf_thres,
   float nms_iou_thres,
+  int num_class,
   bool save_sequence, //=false,
   bool half_prec, //=false
-  bool only_det
+  bool only_det,
+  bool normalize
   ){
   // data-loading ***************************
   slide_params slideParams(/*tile w=*/tileside, /*tile h=*/tileside, /*level=*/0);
@@ -103,7 +121,7 @@ at::Tensor compute_one_slide(
   std::vector<input_object> input_list;
   std::vector<std::future<void>> thread_handle(sizeof(std::future<void>) * loader_num);
   for (int i=0; i<loader_num; i++) 
-    thread_handle[i] = std::async(std::launch::async, &slide_loader::loop_loader, subloaders+i, &input_list);
+    thread_handle[i] = std::async(std::launch::async, &slide_loader::loop_loader, subloaders+i, &input_list, normalize);
   std::vector<std::future<at::Tensor>> async_postproc;
   std::vector<std::future<void>> async_postproc_det;
   if (only_det != true)
@@ -140,7 +158,7 @@ at::Tensor compute_one_slide(
           std::string(".svs"), 
           std::string("_x") + std::to_string(samplex) + std::string("_y") + std::to_string(sampley) + std::string(".txt")
         );
-        async_postproc_det[current_postproc] = std::async(std::launch::async, &det_postproc, out, save_name, half_prec, det_conf_thres, nms_iou_thres);// async post-processing
+        async_postproc_det[current_postproc] = std::async(std::launch::async, &det_postproc, out, save_name, half_prec, det_conf_thres, nms_iou_thres, num_class);// async post-processing
       } else {
         async_postproc[current_postproc] = std::async(std::launch::async, &feature_postproc, out, half_prec);// async post-processing
       }
@@ -248,6 +266,14 @@ int main(int argc, const char* argv[]) {
     .help("set nms iou thres")
     .required()
     .default_value(std::string("0.1")); 
+  program.add_argument("-nclass", "--num_class")
+    .help("num_class")
+    .required()
+    .default_value(std::string("1")); 
+  program.add_argument("--normalize")
+    .help("normalize the input image (unused for yolco)")
+    .default_value(false)
+    .implicit_value(true); 
   program.add_argument("--half")
     .help("half precision")
     .default_value(false)
@@ -282,6 +308,7 @@ int main(int argc, const char* argv[]) {
   torch::jit::script::Module module, classifier;
   // at::Tensor example;
   bool is_only_det = program.get<bool>("--only_det");
+  bool normalize = program.get<bool>("--normalize");
   std::string detector_path = program.get<std::string>("--detector");
   std::string classifier_path = program.get<std::string>("--classifier");
   std::string output_dir = program.get<std::string>("--output_dir");
@@ -318,6 +345,8 @@ int main(int argc, const char* argv[]) {
   float cls_thres = stof(program.get<std::string>("--classifier_thres"));
   float det_thres = stof(program.get<std::string>("--detector_thres"));
   float nms_thres = stof(program.get<std::string>("--nms_thres"));
+  int num_class = stoi(program.get<std::string>("--num_class"));
+  std::cout<<"num_class: "<<num_class<<"\n";
   for (std::string& file : files) {
     torch::NoGradGuard no_grad;
     at::Tensor feature_sequence = compute_one_slide(
@@ -330,9 +359,11 @@ int main(int argc, const char* argv[]) {
       feature_num,
       det_thres,
       nms_thres,
+      num_class,
       program["--save_feature"] == true,
       program["--half"] == true,
-      is_only_det == true //program["--only_det"] == true
+      is_only_det == true, //program["--only_det"] == true
+      normalize == true
     ).detach();
     c10::cuda::CUDACachingAllocator::emptyCache();
     if (program["--only_det"] == true)

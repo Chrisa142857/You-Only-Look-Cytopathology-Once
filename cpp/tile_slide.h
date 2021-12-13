@@ -56,7 +56,7 @@ class slide_loader {
         ~slide_loader(); // kill all loaders
         void print_all_property();
         int load_one_tensor(at::Tensor* inputs);
-        void loop_loader(std::vector<input_object> *inputs);
+        void loop_loader(std::vector<input_object> *inputs, bool normalize);
         void split_loader(slide_loader *subloader, int start, int end);// for multiple loader
 };
 
