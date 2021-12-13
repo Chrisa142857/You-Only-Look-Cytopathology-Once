@@ -24,7 +24,7 @@ Please install `openslide` at first. Let `PackageConfig` can find `openslide.pc`
 ```
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=\path\to\Libtorch -DCMAKE_INSTALL_PREFIX=\path\to\Libtorchvision ..
+cmake -DCMAKE_INSTALL_PREFIX=\path\to\Libtorch:\path\to\Libtorchvision ..
 cmake --build ..
 ```
 
