@@ -20,11 +20,12 @@ build/main \
 ```
 
 ## Install
+Please install `openslide` at first. Let `PackageConfig` can find `openslide.pc`.
 ```
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=\path\to\Libtorch ..
-cmake --build .. --config Release
+cmake -DCMAKE_INSTALL_PREFIX=\path\to\Libtorch -DCMAKE_INSTALL_PREFIX=\path\to\Libtorchvision ..
+cmake --build ..
 ```
 
 
