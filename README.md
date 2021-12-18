@@ -12,7 +12,7 @@ RAM: 94 GB
 ```
  - Example of feature maps can be found here: [Colab](https://colab.research.google.com/drive/1-qvoLT18kf_6Of8BpaMfCvxvwfeyy1sw?usp=sharing)
 
-### Project Tree:
+### Project Dir Tree:
 - [x] Patch level classification `cls-patch-level/`
 - [x] Patch level detection `det-patch-level/`
 - [x] Qualitative results `qualitative-results/`
