@@ -5,7 +5,7 @@ This is the code available of a preprint (under review) paper. Please cite it. [
 ### <font color='red'> News: </font> 
  - A new finding that the proposed InCNet of YOLCO has a very similiar structure of [Hopfield network](https://en.wikipedia.org/wiki/Hopfield_network#:~:text=A%20Hopfield%20network%20(or%20Ising,Lenz%20on%20the%20Ising%20model), see following detailed figure of Hopfield network from [Wikipedia](https://en.wikipedia.org/wiki/Hopfield_network#:~:text=A%20Hopfield%20network%20(or%20Ising,Lenz%20on%20the%20Ising%20model.).
  
-![Hopfield](https://en.wikipedia.org/wiki/File:Hopfield-net-vector.svg)
+![Hopfield](Hopfield-net-vector.svg)
 
  - The speed is `55.9s` for the inference of a WSI has 4,089,446,400 RGB pixels (`63,949 x 63,949 x 3`) in our cpp release version ! 
 ```
