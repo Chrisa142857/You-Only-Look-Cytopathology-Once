@@ -3,7 +3,7 @@
 This is the code available of a preprint (under review) paper. Please cite it. [arXiv:2106.15113](https://arxiv.org/abs/2106.15113)
 
 ### <font color='red'> News: </font> 
- - A new finding that the proposed InCNet of YOLCO has a very similiar structure of [Hopfield network](https://en.wikipedia.org/wiki/Hopfield_network), see following detailed figure of Hopfield network from [Wikipedia](https://en.wikipedia.org/wiki/Hopfield_network).
+ - A new finding that the proposed InCNet of YOLCO has a very similiar structure of [Hopfield network](https://en.wikipedia.org/wiki/Hopfield_network) (1982), see following detailed figure of Hopfield network from [Wikipedia](https://en.wikipedia.org/wiki/Hopfield_network).
  
 ![Hopfield](Hopfield-net-vector.svg.png)
 
